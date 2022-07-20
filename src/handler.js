@@ -19,27 +19,8 @@ const addBookHandler = (request, h) => {
     finished = true;
   }
 
-  const instertedAt = new Date().toISOString();
-  const updatedAt = instertedAt;
-
-  const newBook = {
-    name,
-    year,
-    author,
-    summary,
-    publisher,
-    pageCount,
-    readPage,
-    reading,
-    id,
-    finished,
-    instertedAt,
-    updatedAt,
-  };
-  books.push(newBook);
-
-  const isSuccess = books.filter((book) => book.id === id).length > 0;
-
+  const insertedAt = new Date().toISOString();
+  const updatedAt = insertedAt;
   if (name === undefined || name === '') {
     const response = h.response({
       status: 'fail',
@@ -54,7 +35,26 @@ const addBookHandler = (request, h) => {
     });
     response.code(400);
     return response;
-  } if (isSuccess) {
+  }
+  const newBook = {
+    name,
+    year,
+    author,
+    summary,
+    publisher,
+    pageCount,
+    readPage,
+    reading,
+    id,
+    finished,
+    insertedAt,
+    updatedAt,
+  };
+  books.push(newBook);
+
+  const isSuccess = books.filter((book) => book.id === id).length > 0;
+
+  if (isSuccess) {
     const response = h.response({
       status: 'success',
       message: 'Buku berhasil ditambahkan',
@@ -73,45 +73,39 @@ const addBookHandler = (request, h) => {
   return response;
 };
 
-// const getAllBooksHandler = () => ({
-//   status: 'success',
-//   data: {
-//     books,
-//   },
-// });
 // Lihat semua data buku
 const getAllBooksHandler = (request, h) => {
+  const { name, reading, finished } = request.query;
+
+  let bookFilters = books;
+
+  if (name !== undefined) {
+    bookFilters = bookFilters.filter((book) => book
+      .name.toLowerCase().includes(name.toLowerCase()));
+  }
+
+  if (reading !== undefined) {
+    bookFilters = bookFilters.filter((book) => book.reading === !!Number(reading));
+  }
+
+  if (finished !== undefined) {
+    bookFilters = bookFilters.filter((book) => book.finished === !!Number(finished));
+  }
+
   const response = h.response({
     status: 'success',
     data: {
-      books: books.map((book) => ({
+      books: bookFilters.map((book) => ({
         id: book.id,
         name: book.name,
         publisher: book.publisher,
       })),
     },
-
   });
-
   response.code(200);
 
   return response;
 };
-// const getAllBooksHandler = (h) => {
-//   if (books.length > 0) {
-//     const response = h.response({
-//       status: 'success',
-//       data: { books },
-//     });
-//     response.code(200);
-//     return response;
-//   }
-//   const response = h.response({
-//     status: 'success',
-//     data: { books },
-//   });
-//   return response;
-// };
 
 // Lihat Detail Buku
 const getBookDetailHandler = (request, h) => {
@@ -122,9 +116,7 @@ const getBookDetailHandler = (request, h) => {
   if (book !== undefined) {
     return {
       status: 'success',
-      data: {
-        book,
-      },
+      data: { book },
     };
   }
   const response = h.response({
